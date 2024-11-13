@@ -1,0 +1,38 @@
+---
+
+👨‍🏫 **Author:** {author}<br>
+📋 **Notebook:** {name} - [**Source**]({link})<br>
+⭐ **Votes:** {votes}<br>
+📝 **Summary:** {summary}
+
+---
+
+💻 **Code Complexity:** {code_complexity}<br>
+📂 **Code Organization:** {code_organization}<br>
+🛠️ **Maintainability:** {maintainability}<br>
+💼 **Documentation:** {documentation}<br>
+♻️ **Reusability:** {reusability}
+
+---
+
+💎 **Unique Features:** <br>**-** {unique_features}<br>
+🎲 **Interesting Tricks:** <br>**-** {interesting_tricks}<br>
+💡 **Innovative Solutions:** <br>**-** {innovative_solutions}
+
+---
+
+🔍 **Hidden Gems:** <br>**-** {hidden_gems}<br>
+🧠 **Clever Solutions:** <br>**-** {clever_solutions}<br>
+🌱 **Overlooked Opportunities:** <br>**-** {overlooked_opportunities}
+
+---
+
+💪 **Strengths:** <br> ✔️ {strengths}
+
+---
+
+⚠️ **Weaknesses:** <br> ❌ {weaknesses}
+
+---
+
+🔧 **Proposed Improvements:** <br> 📈 {proposed_improvements}

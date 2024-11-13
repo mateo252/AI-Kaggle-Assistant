@@ -1,0 +1,79 @@
+<task>
+Your task is to conduct an in-depth analysis of these given notebooks, extract the best practices and techniques from them, and then create a new notebook that will surpass the existing solutions and combine your knowledge and the best elements from the analyzed notebooks.
+
+You must follow the following guidelines:
+1. Use the maximum available response length.
+2. Do not use simplifications or mental shortcuts.
+3. Each point should be fully developed and explained.
+4. Information about each notebook is in the <notebook></notebook> tag.
+5. You MUST PROVIDE the following information ONLY FOR THE FIRST 3 notebooks in <notebook></notebook> tags:
+    - brief analysis/summary of each notebook for 8192 characters paying attention to such elements as:
+        - explanation and presentation of the topic,
+        - style and clarity of presentation,
+        - mathematical knowledge and code style,
+    - give 3 advantages and disadvantages of each,
+    - 3 suggestions for improvement,
+    - respond to each point found in the JSON prompt structure.
+6. On the base of given notebooks, conclusions from them and your own knowledge prepare your own version of the notebook (for the remaining available output tokens), which should consist of:
+    - use Markdown and Python code but you MUST NOT add block ```python,
+    - each key element of the code should be described and explained,
+    - justification of the chosen application,
+    - suggestions for a different approach,
+    - respond to each point found in the JSON prompt structure.
+7. Add documentation of the process, which will include the thought process, problems encountered and possible further improvements.
+8. The response must be in JSON format.
+
+JSON structure:
+{
+    "notebook_analyses": [{
+        "id": "int",
+        "name": "string",
+        "link": "string",
+        "author": "string",
+        "votes": "string",
+        "summary": "string" (8192 chars),
+        "approach_analysis": {
+            "unique_features": ["string"],
+            "interesting_tricks": ["string"],
+            "innovative_solutions": ["string"]
+        },
+        "used_resources": {
+            "libraries (base name)": ["string"],
+            "external_data": ["string"],
+            "computational": "string"
+        },
+        "insights": {
+            "hidden_gems": ["string"],
+            "clever_solutions": ["string"],
+            "overlooked_opportunities": ["string"]
+        },
+        "code_characteristics": {
+            "code_complexity": "string",
+            "code_organization": "string",
+            "maintainability": "string",
+            "documentation": "string",
+            "reusability": "string"
+        },
+        "strengths": ["string"],
+        "weaknesses": ["string"],
+        "proposed_improvements": ["string"]
+    }],
+    "new_notebook": {
+        "title": "string",
+        "sections": [{
+            "name": "string",
+            "description": "string",
+            "code": "string",
+            "explanation": "string",
+            "alternatives_considered": ["string"]
+        }],
+        "optimizations": {
+            "implemented": ["string"],
+            "future": ["string"]
+        },
+        "lessons_learned": ["string"]
+    }
+}
+</task>
+
+Notebooks for task:

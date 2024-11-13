@@ -1,0 +1,8 @@
+streamlit==1.39.0
+google-generativeai==0.8.3
+json-repair==0.30.0
+nbformat==5.10.4
+nbconvert==7.16.4
+python-dotenv==1.0.1
+kaggle==1.6.17
+pandas==2.2.3

@@ -1,0 +1,100 @@
+<task>
+Your task is to conduct an in-depth analysis of these notebooks, extract the best practices and techniques from them, and then improve the elements of a given notebook in <my_notebook></my_notebook> tag that will surpass existing solutions and combine your knowledge.
+
+You must follow the following guidelines:
+1. Use the maximum available response length.
+2. Do not use simplifications or mental shortcuts.
+3. Each point should be fully developed and explained.
+4. Information about each notebook is in the <notebook></notebook> tag.
+5. You MUST PROVIDE the following information ONLY FOR THE FIRST 3 notebooks in <notebook></notebook> tags:
+    - brief analysis/summary of each notebook for 8192 characters paying attention to such elements as:
+        - explanation and presentation of the topic,
+        - style and clarity of presentation,
+        - mathematical knowledge and code style,
+    - give 3 advantages and disadvantages of each,
+    - 3 suggestions for improvement,
+    - respond to each point found in the JSON prompt structure.
+6. Information about notebook to imporve is in the <my_notebook></my_notebook> tag.
+7. Refine and improve the elements only within the <my_notebook></my_notebook> tag, baseased on best practices from the <notebook></notebook> tags. The response should focus on the following instructions:
+    - use Markdown and Python code but you MUST NOT add block ```python,
+    - for each key element of the code in <my_notebook></my_notebook>:
+        - describe and explain the purpose and functionality,
+        - provide justifications for each chosen implementation approach,
+        - offer alternative approaches and their potential applications,
+    - give 3 advantages and disadvantages of data in <my_notebook></my_notebook> tag,
+    - respond to each point found in the JSON prompt structure, specifically addressing aspects relevant to <my_notebook></my_notebook>.
+8. Add documentation of the process, which will include the thought process, problems encountered and possible further improvements.
+9. The response must be in JSON format.
+
+JSON structure:
+{
+    "notebook_analyses": [{
+        "id": "int",
+        "name": "string",
+        "link": "string",
+        "author": "string",
+        "votes": "string",
+        "summary": "string" (8192 chars),
+        "approach_analysis": {
+            "unique_features": ["string"],
+            "interesting_tricks": ["string"],
+            "innovative_solutions": ["string"]
+        },
+        "used_resources": {
+            "libraries (base name)": ["string"],
+            "external_data": ["string"],
+            "computational": "string"
+        },
+        "insights": {
+            "hidden_gems": ["string"],
+            "clever_solutions": ["string"],
+            "overlooked_opportunities": ["string"]
+        },
+        "code_characteristics": {
+            "code_complexity": "string",
+            "code_organization": "string",
+            "maintainability": "string",
+            "documentation": "string",
+            "reusability": "string"
+        },
+        "strengths": ["string"],
+        "weaknesses": ["string"],
+        "proposed_improvements": ["string"]
+    }],
+    "improved_notebook" : {
+        "strengths": ["string"],
+        "weaknesses": ["string"],
+        "approach_analysis": {
+            "unique_features": ["string"],
+            "interesting_tricks": ["string"],
+            "innovative_solutions": ["string"]
+        },
+        "code_characteristics": {
+            "code_complexity": "string",
+            "code_organization": "string",
+            "maintainability": "string",
+            "documentation": "string",
+            "reusability": "string"
+        },
+        "element_analysis": [{
+            "element": "string",
+            "description": "string" (1024 chars),
+            "analysis_details": "string" (2048 chars),
+            "suggestions_for_improvement": {
+                "issue": "string",
+                "suggestion": "string",
+                "severity": "string",
+                "example": "string",
+                "expected_outcome": "string"
+            }
+        }],
+        "feedback": {
+            "positive_aspects": ["string"],
+            "areas_for_improvement": ["string"]
+        },
+        "implementation_notes": "string"
+    }
+}
+</task>
+
+Notebooks for task:
