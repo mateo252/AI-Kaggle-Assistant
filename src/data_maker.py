@@ -1,52 +1,41 @@
 from typing import Any
-from variables import PathVariable as path_vars
+from config import PathVariable
 from datetime import datetime
-import random
 from nbconvert import MarkdownExporter
 import nbformat
-import kaggle
+import textwrap
 import json
 import os
 
 
 
 class DataMaker:
+
     def __init__(self) -> None:
-        """
-        Only declaring a variable to format to Markdown
-        """
-        
         self.markdown_exporter = MarkdownExporter()
         
         
-    def preparations_data_dirs(self) -> None:
+    def prepare_data_dir(self) -> None:
         """
         Function checks if folders exist and cleans up with notebooks on new launches
         """
         
         # Create directories in non-existent directories
-        for val in [var.value for var in path_vars]:
-            if not os.path.exists(val):
-                os.mkdir(val)
+        for dir_path in [path_value.value for path_value in PathVariable]:
+            os.makedirs(dir_path, exist_ok=True)
             
         # If the directory is not empty, clean it
-        if len(os.listdir(path_vars.NOTEBOOK_PATH.value)) > 0:
-            for file in os.listdir(path_vars.NOTEBOOK_PATH.value):
-                if os.path.isfile(os.path.join(path_vars.NOTEBOOK_PATH.value, file)):
-                    os.remove(os.path.join(path_vars.NOTEBOOK_PATH.value, file))
+        NOTEBOOK_PATH = PathVariable.NOTEBOOK_PATH.value
+        if os.listdir(NOTEBOOK_PATH):
+            for file in os.listdir(NOTEBOOK_PATH):
+                if os.path.isfile(os.path.join(NOTEBOOK_PATH, file)):
+                    os.remove(os.path.join(NOTEBOOK_PATH, file))
                   
                     
-    def load_api(self, api: kaggle.KaggleApi) -> None:
-        """
-        Args:
-            api (kaggle.KaggleApi): Activated Kaggle API
-        """
-        
-        self.api = api    
-           
-                    
     def download_notebook(self, kernel_spec: dict[str, Any]) -> bool:
-        """Function to save notebook in JSON format to .ipynb file locally
+        """
+        Function to save notebook in JSON format to .ipynb file locally
+        From this notebook, a prompt is created for the model
 
         Args:
             kernel_spec (dict[str, Any]): Dict with kernel specifications
@@ -56,17 +45,16 @@ class DataMaker:
         """
         
         try:
-            with open(os.path.join(path_vars.NOTEBOOK_PATH.value, f"{kernel_spec['slug']}.ipynb"), "w", encoding="utf-8") as f:
+            with open(os.path.join(PathVariable.NOTEBOOK_PATH.value, f"{kernel_spec['slug']}.ipynb"), "w", encoding="utf-8") as f:
                 json.dump(json.loads(kernel_spec["source"]), f, indent=4)
                     
         except Exception as e:
-            # TODO Logging
             return False
         
         return True
     
     
-    def _notebook_prompt_structure(self, notebook_md: str, kernel_spec: dict[str, Any]) -> str:
+    def _make_notebook_prompt_structure(self, notebook_md: str, kernel_spec: dict[str, Any]) -> str:
         """Function of making a prompt with notebook section
 
         Args:
@@ -77,36 +65,36 @@ class DataMaker:
             str: Prompt with <notebook></notebook> tag
         """
         
-        return \
-        f"""
-<notebook>
-<author>
-{kernel_spec['author']}
-</author>
-<title>
-{kernel_spec['title']}
-</title>
-<link>
-{kernel_spec['link']}
-</link>
-<category>
-{kernel_spec['categoryIds']}
-</category>
-<language>
-{kernel_spec['language']}
-</language>
-<votes>
-{kernel_spec['totalVotes']}
-</votes>
-<code>
-{notebook_md.strip()}
-</code>
-</notebook>
+        return textwrap.dedent(f"""
+            <notebook>
+            <author>
+            {kernel_spec['author']}
+            </author>
+            <title>
+            {kernel_spec['title']}
+            </title>
+            <link>
+            {kernel_spec['link']}
+            </link>
+            <category>
+            {kernel_spec['categoryIds']}
+            </category>
+            <language>
+            {kernel_spec['language']}
+            </language>
+            <votes>
+            {kernel_spec['totalVotes']}
+            </votes>
+            <code>
+            {notebook_md.strip()}
+            </code>
+            </notebook>
+        """)
+
+
+    def _convert_ipynb_to_markdown(self, current_file: str | Any) -> str | bool:
         """
-
-
-    def _convert_to_markdown(self, current_file: str | Any) -> str | bool:
-        """Function that converts .ipynb notepad to Markdown
+        Function that converts .ipynb notebook to Markdown
 
         Args:
             current_file (str|Any): Name of notebook .ipynb
@@ -117,127 +105,60 @@ class DataMaker:
         
         if isinstance(current_file, str):
             if os.path.splitext(current_file)[1] != ".ipynb":
-                # TODO Logging
                 return False
             
-        else:
-            # Save selected notebook via st.file_uploader to tmp dir
-            content = current_file.getvalue().decode("utf-8")
-            notebook = json.loads(content)
-            
-            for cell in notebook["cells"]:
-                if "outputs" in cell:
-                    cell["outputs"] = []
-                if "execution_count" in cell:
-                    cell["execution_count"] = None
-                    
-            with open(os.path.join(path_vars.TMP_PATH.value, current_file.name), "w", encoding="utf-8") as f:
-                json.dump(notebook, f, indent=4, ensure_ascii=False)
-
-            current_file = os.path.join(path_vars.TMP_PATH.value, current_file.name)
-        
         try:
             with open(current_file, "r", encoding="utf-8") as f:
                 notebook_content = nbformat.read(f, as_version=4)
                 body, _ = self.markdown_exporter.from_notebook_node(notebook_content)
+                
         except Exception as e:
-            # TODO Logging
             return False
 
         return body
     
     
-    def make_notebook_prompt(self, kernels_spec: list[dict[str, Any]], file_instruction: str, my_notebook = None) -> str | bool:
-        """Function that creates the final prompt for the LLM model 
+    def make_notebook_generator_prompt(self, kernels_spec: list[dict[str, Any]], file_instruction: str) -> str | bool:
+        """
+        Function that creates the final prompt for the LLM model
+        It combines two parts: instructions from a file and text with information from a notebook
 
         Args:
             kernels_spec (list[dict[str, Any]]): List of dicts with kernel specification
             file_instruction (str): Name of file with correct prompt
-            my_notebook: Select mode of work (generate or improve). Default: None
             
         Returns:
             str | bool: Ready prompt for LLM model
         """
         
         try:
-            with open(os.path.join(path_vars.TEMPLATE_PATH.value, file_instruction), "r", encoding="utf-8") as f:
+            with open(os.path.join(PathVariable.TEMPLATE_PATH.value, file_instruction), "r", encoding="utf-8") as f:
                 instruction_prompt = f.read()
         
         except Exception as e:
-            # TODO Logging
             return False
         
-        if len(instruction_prompt.strip()) == 0:
-            # TODO Logging
+        # If the instruction prompt could be empty
+        if not instruction_prompt.strip():
             return False
         
-        full_notebook_prompt = ""
+        full_notebook_prompt_structure = ""
         for spec in kernels_spec:
-            current_file = os.path.join(path_vars.NOTEBOOK_PATH.value, f"{spec['slug']}.ipynb")
-            if isinstance(notebook_markdown := self._convert_to_markdown(current_file), bool):
-                # TODO Logging
+            current_file = os.path.join(PathVariable.NOTEBOOK_PATH.value, f"{spec['slug']}.ipynb")
+            if isinstance(notebook_markdown := self._convert_ipynb_to_markdown(current_file), bool):
                 return False
             
-            full_notebook_prompt += self._notebook_prompt_structure(notebook_markdown, spec)
+            full_notebook_prompt_structure += self._make_notebook_prompt_structure(notebook_markdown, spec)
         
-        if my_notebook:
-            if isinstance(my_notebook_md := self._convert_to_markdown(my_notebook), bool):
-                # TODO Logging
-                return False
-            
-            my_notebook_prompt = \
-            f"""
-<my_notebook>
-{my_notebook_md}
-</my_notebook>
-
-            """ 
-
-            return f"{instruction_prompt}\n{my_notebook_prompt}\n{full_notebook_prompt.strip()}"
-            
-        return f"{instruction_prompt}\n{full_notebook_prompt.strip()}"
-    
-    
-    def format_kaggle_notebook(self, kaggle_notebook_data: dict[str, Any], template: str) -> str:
-        """Function returns formatted md string for each kaggle notebook analyzed
-
-        Args:
-            kaggle_notebook_data (dict[str, Any]): Dict after analysis
-            template (str): Template for presentation of results
-
-        Returns:
-            str: Final format of the template with data filled in
-        """
-        
-        return template.format(
-            author = kaggle_notebook_data.get('author', ''),
-            name = kaggle_notebook_data.get('name', ''),
-            link = kaggle_notebook_data.get('link', ''), 
-            votes = kaggle_notebook_data.get('votes'),
-            summary = kaggle_notebook_data.get('summary'),
-            
-            code_complexity = kaggle_notebook_data.get('code_characteristics', {}).get('code_complexity'),
-            code_organization = kaggle_notebook_data.get('code_characteristics', {}).get('code_organization'),
-            maintainability = kaggle_notebook_data.get('code_characteristics', {}).get('maintainability'),
-            documentation = kaggle_notebook_data.get('code_characteristics', {}).get('documentation'),
-            reusability = kaggle_notebook_data.get('code_characteristics', {}).get('reusability'),
-            
-            unique_features = '<br> **-** '.join([str(i) for i in kaggle_notebook_data.get('approach_analysis', {}).get('unique_features', [])]),
-            interesting_tricks = '<br> **-** '.join([str(i) for i in kaggle_notebook_data.get('approach_analysis', {}).get('interesting_tricks', [])]),
-            innovative_solutions = '<br> **-** '.join([str(i) for i in kaggle_notebook_data.get('approach_analysis', {}).get('innovative_solutions', [])]),
-            
-            hidden_gems = '<br> **-** '.join([str(i) for i in kaggle_notebook_data.get('insights', {}).get('hidden_gems', [])]),
-            clever_solutions = '<br> **-** '.join([str(i) for i in kaggle_notebook_data.get('insights', {}).get('clever_solutions', [])]),
-            overlooked_opportunities = '<br> **-** '.join([str(i) for i in kaggle_notebook_data.get('insights', {}).get('overlooked_opportunities', [])]),
-            
-            strengths = '<br> ✔️ '.join([str(i) for i in kaggle_notebook_data.get('strengths', [])]),
-            weaknesses = '<br> ❌ '.join([str(i) for i in kaggle_notebook_data.get('weaknesses', [])]),
-            proposed_improvements = '<br> 📈 '.join([str(i) for i in kaggle_notebook_data.get('proposed_improvements', [])])
-        )
-    
+        # Full prompt is: 
+        # - instruction from file
+        # - notebooks generate by function '_make_notebook_prompt_structure(...)'
+        return f"{instruction_prompt}\n{full_notebook_prompt_structure.strip()}"
+       
     
     def format_generated_notebook(self, generated_notebook_data: dict[str, Any], template: str) -> str:
-        """Function returns formatted md string for generated notebook
+        """
+        Function returns formatted md string for generated notebook
 
         Args:
             generated_notebook_data (dict[str, Any]): Dict after creating by LLM
@@ -286,71 +207,52 @@ class DataMaker:
             summary = summary_data_text
         )
     
-    
-    def format_improved_notebook(self, improved_notebook_data: dict[str, Any], template: str) -> str:
-        """Function returns formatted md string for improved notebook
+           
+    def save_new_markdown(self, markdown_text: str, name: str) -> bool:
+        """
+        Function to save to notebook in markdown format generated by AI
+        Location path is set by 'config' file
+        There is a security feature so that two notepads do not have the same file name
 
         Args:
-            improved_notebook_data (dict[str, Any]): Dict after creating by LLM
-            template (str): Template for presentation of results
+            markdown_text (str): Markdown text generated by AI
+            name (str): Name of notebook, it is part of the file name
 
         Returns:
-            str: Final format of the template with data filled in
+            bool: Signal if the file has been saved correctly
         """
         
-        analysis_data_text = "## 📈 Element Analysis\n\n"
-        for analysis_data in improved_notebook_data.get("element_analysis", []):
-            analysis_data_text += f"### 🧩 {analysis_data.get('element')}\n\n"
-            analysis_data_text += f"✏️ {analysis_data.get('description')}\n\n"
-            analysis_data_text += f"🔎 {analysis_data.get('analysis_details')}\n\n"
-            
-            analysis_data_text += "#### 💡 Suggestions For Improvement\n\n"
-            analysis_data_text += f"🚨 **Severity:** {analysis_data.get('suggestions_for_improvement', {}).get('severity')}\n\n"
-            analysis_data_text += f"🐞 **Issue:** {analysis_data.get('suggestions_for_improvement', {}).get('issue')}\n\n"
-            analysis_data_text += f"🤔 **Suggestion:** {analysis_data.get('suggestions_for_improvement', {}).get('suggestion')}\n\n"
-            analysis_data_text += f"💻 **Example:**\n {analysis_data.get('suggestions_for_improvement', {}).get('example')}\n\n"
-            analysis_data_text += f"🎯 **Expected Outcome:** {analysis_data.get('suggestions_for_improvement', {}).get('expected_outcome')}\n\n"
-            
-            analysis_data_text += "---\n\n"
-        
-        return template.format(
-            strengths = '<br> ✔️ '.join([str(i) for i in improved_notebook_data.get('strengths', [])]),
-            weaknesses = '<br> ❌ '.join([str(i) for i in improved_notebook_data.get('weaknesses', [])]),
-            
-            unique_features = '<br> **-** '.join([str(i) for i in improved_notebook_data.get('approach_analysis', {}).get('unique_features', [])]),
-            interesting_tricks = '<br> **-** '.join([str(i) for i in improved_notebook_data.get('approach_analysis', {}).get('interesting_tricks', [])]),
-            innovative_solutions = '<br> **-** '.join([str(i) for i in improved_notebook_data.get('approach_analysis', {}).get('innovative_solutions', [])]),
-            
-            code_complexity = improved_notebook_data.get('code_characteristics', {}).get('code_complexity'),
-            code_organization = improved_notebook_data.get('code_characteristics', {}).get('code_organization'),
-            maintainability = improved_notebook_data.get('code_characteristics', {}).get('maintainability'),
-            documentation = improved_notebook_data.get('code_characteristics', {}).get('documentation'),
-            reusability = improved_notebook_data.get('code_characteristics', {}).get('reusability'),
-            
-            analysis = analysis_data_text,
-            positive_aspects = '<br> **-** '.join([str(i) for i in improved_notebook_data.get('feedback', {}).get('positive_aspects', [])]),
-            areas_for_improvement = '<br> **-** '.join([str(i) for i in improved_notebook_data.get('feedback', {}).get('areas_for_improvement', [])]),
-        
-            summary = improved_notebook_data.get('implementation_notes')
-        )
-        
-    def save_new_markdown(self, markdown_text: str, improved: bool = False) -> bool:
-        """Function save markdown string to file
+        def sort_files(file: str) -> int | float:
+            """
+            Simple function takes first number of file name
+            It tries to return value as 'int'
 
-        Args:
-            markdown_text (str): Markdown to save - generated or improved
-            improved (bool, optional): Decide if LLM returned new notebook or it just improved one. Defaults to False.
+            Args:
+                file (str): Name of file to sort
 
-        Returns:
-            bool: Confirmation of successful save
-        """
-        
-        mode = "improved" if improved else "generated"
+            Returns:
+                int: Number of file in dir
+            """
+            try:
+                return int(file.split("-")[0])
+            
+            except Exception:
+                return float("inf")
+
+
+        max_file_number = sorted(
+            os.listdir(PathVariable.SAVE_PATH.value),
+            key=lambda x: sort_files(x),
+            reverse=True
+        )[0].split("-")[0]
+
         try:
-            with open(os.path.join(path_vars.SAVE_PATH.value, f"md-{mode}-{random.randint(100, 99999)}-{datetime.now().date()}.md"), "w", encoding="utf-8") as f:
+            with open(os.path.join(PathVariable.SAVE_PATH.value, f"{int(max_file_number) + 1}-{datetime.now().date()}-{"-".join(name.split(""))}.md"), 
+                      "w", encoding="utf-8"
+            ) as f:
                 f.write(markdown_text)
+
         except Exception as e:
-            # TODO Logging
             return False
         
         return True
