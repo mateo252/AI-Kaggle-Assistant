@@ -21,8 +21,13 @@ if "API_STATUS" not in st.session_state:
         "GEMINI_CHECKED" : False,
         "GEMINI_WORKS" : False,
         "KAGGLE_CHECKED" : False,
-        "KAGGLE_WORKS" : False,
+        "KAGGLE_WORKS" : False
     }
+
+
+if "CHAT_LLM" not in st.session_state["API_STATUS"].keys():
+    st.session_state["API_STATUS"]["CHAT_LLM"] = False
+
 
 # Store object of Kaggle and Gemini API
 # It is used by other sites regarding this project thanks to the use of session state
@@ -31,6 +36,7 @@ if "API_OBJECTS" not in st.session_state:
         "KAGGLE_OBEJCT" : False,
         "LLM_OBJECT" : False,
     }
+
 
 llm = LLM()
 my_kaggle_api = MyKaggleApi()
