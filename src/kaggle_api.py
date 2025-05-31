@@ -22,7 +22,7 @@ class MyKaggleApi:
     
     def get_kernels_list(self, competition: str | None = None, 
                          dataset: str | None = None,
-                         **kwargs):
+                         **kwargs)-> Any:
         """
         Function that retrieves kernel (notebook) name based on request configuration
 
@@ -38,8 +38,8 @@ class MyKaggleApi:
 
         # Default settings for api request
         default_settings = {
-            "page_num"  : "1",
-            "page_size" : "20",
+            "page"      : 1,
+            "page_size" : 20,
             "language"  : "python",
             "sort_by"   : "voteCount"
         }
@@ -47,12 +47,7 @@ class MyKaggleApi:
 
         # Dict with final settings for api request
         kernels_config = {"dataset" : dataset} if competition is None else {"competition" : competition}
-        kernels_config.update({
-            "page"      : default_settings["page_num"],
-            "page_size" : default_settings["page_size"],
-            "language"  : default_settings["language"],
-            "sort_by"   : default_settings["sort_by"],
-        })
+        kernels_config.update(default_settings)
         
         try:
             kernels_name_list = self.api.kernels_list(**kernels_config) # type: ignore
@@ -83,7 +78,7 @@ class MyKaggleApi:
             notebook_name = kernel_name.split("/")[1]
             
             try:
-                request_kernel = self.api.kernel_pull(user_name=user_name, kernel_slug=notebook_name) # type: ignore
+                request_kernel = self.api.kernel_pull(user_name=user_name, kernel_slug=notebook_name) 
                 kernels_spec_list.append({
                     "author"                 : request_kernel["metadata"]["author"],
                     "categoryIds"            : request_kernel["metadata"]["categoryIds"],
