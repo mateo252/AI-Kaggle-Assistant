@@ -38,7 +38,6 @@ if "MODEL_SETTINGS" in st.session_state and "API_OBJECTS" in st.session_state:
     ---
     """)
 
-
     with st.sidebar:
         if st.button(label="Clear chat", icon="🧹"):
             st.session_state["messages"] = [{"role"   : "assistant", 

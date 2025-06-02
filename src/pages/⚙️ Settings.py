@@ -21,7 +21,7 @@ if "API_STATUS" not in st.session_state:
         "GEMINI_CHECKED" : False,
         "GEMINI_WORKS" : False,
         "KAGGLE_CHECKED" : False,
-        "KAGGLE_WORKS" : False
+        "KAGGLE_WORKS" : False,
     }
 
 

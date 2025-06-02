@@ -4,5 +4,6 @@ json-repair
 nbformat
 nbconvert
 python-dotenv
-kaggle
+kaggle==1.6.17
 pandas
+keyboard
