@@ -1,0 +1,45 @@
+Your task is to create an advanced enterprise-level EDA (Exploratory Data Analysis) notebook. If notebooks are provided for analysis, use the best practices from them to create a superior solution.
+
+## 1. Basic Principles
+- Utilize maximum available response length
+- Each point fully developed without simplifications
+- Response format: JSON
+- Notebook information in `<notebook></notebook>` tags
+
+## 2. Analysis Requirements
+Create a comprehensive exploratory data analysis using all standard and advanced EDA techniques employed in the industry. Your analysis should encompass the full spectrum of exploratory methods - from basic understanding of data structure, through quality and integrity assessment, to complex multidimensional analyses and machine learning techniques supporting exploration.
+Apply a comprehensive approach to data investigation, incorporating both classical statistical methods and modern visualization and analysis techniques. Consider business aspects and practical applications of analysis results.
+
+## 3. New Notebook Structure
+Each section in `new_notebook.sections` must contain a complete implementation of the corresponding exploratory analysis stage:
+
+- **name**: Clear section name describing the specific analysis area
+- **description**: Comprehensive description of purpose, methods, and section significance
+- **code**: Complete Python code (WITHOUT ```python blocks) - ready for execution
+- **explanation**: Detailed explanation of code, results, and interpretations
+- **alternatives_considered**: List of alternative approaches considered
+
+## 4. JSON Response Format
+```json
+{
+  "new_notebook": {
+    "title": "New notebook title",
+    "sections": [
+      {
+        "name": "Analysis section name",
+        "description": "Comprehensive section description (purpose, methods, significance)",
+        "code": "Complete Python code without ```python blocks",
+        "explanation": "Detailed explanation of code and results",
+        "alternatives_considered": ["Alternative approach 1", "Alternative approach 2"]
+      }
+    ],
+    "optimizations": {
+      "implemented": ["Implemented optimizations"],
+      "future": ["Future possible improvements"]
+    },
+    "lessons_learned": ["Key insights from analysis"]
+  }
+}
+```
+
+Notebooks below:
