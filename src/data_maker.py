@@ -16,9 +16,7 @@ class DataMaker:
         
         
     def prepare_data_dir(self) -> None:
-        """
-        Function checks if folders exist and cleans up with notebooks on new launches
-        """
+        """Function checks if folders exist and cleans up with notebooks on new launches"""
         
         # Create directories in non-existent directories
         for dir_path in [path_value.value for path_value in PathVariable]:
@@ -45,8 +43,16 @@ class DataMaker:
         """
         
         try:
-            with open(os.path.join(PathVariable.NOTEBOOK_PATH.value, f"{kernel_spec['slug']}.ipynb"), "w", encoding="utf-8") as f:
-                json.dump(json.loads(kernel_spec["source"]), f, indent=4)
+            with open(
+                file=os.path.join(PathVariable.NOTEBOOK_PATH.value, f"{kernel_spec['slug']}.ipynb"),
+                mode="w",
+                encoding="utf-8"
+            ) as f:
+                json.dump(
+                    obj=json.loads(kernel_spec["source"]),
+                    fp=f,
+                    indent=4
+                )
                     
         except Exception as e:
             return False
@@ -92,7 +98,7 @@ class DataMaker:
         """)
 
 
-    def _convert_ipynb_to_markdown(self, current_file: str | Any) -> str | bool:
+    def convert_ipynb_to_markdown(self, current_file: str | Any) -> str | bool:
         """
         Function that converts .ipynb notebook to Markdown
 
@@ -132,7 +138,11 @@ class DataMaker:
         """
         
         try:
-            with open(os.path.join(PathVariable.TEMPLATE_PATH.value, file_instruction), "r", encoding="utf-8") as f:
+            with open(
+                file=os.path.join(PathVariable.TEMPLATE_PATH.value, file_instruction),
+                mode="r",
+                encoding="utf-8"
+            ) as f:
                 instruction_prompt = f.read()
         
         except Exception as e:
@@ -145,10 +155,13 @@ class DataMaker:
         full_notebook_prompt_structure = ""
         for spec in kernels_spec:
             current_file = os.path.join(PathVariable.NOTEBOOK_PATH.value, f"{spec['slug']}.ipynb")
-            if isinstance(notebook_markdown := self._convert_ipynb_to_markdown(current_file), bool):
+            if isinstance(notebook_markdown := self.convert_ipynb_to_markdown(current_file), bool):
                 return False
             
-            full_notebook_prompt_structure += self._make_notebook_prompt_structure(notebook_markdown, spec)
+            full_notebook_prompt_structure += self._make_notebook_prompt_structure(
+                notebook_md=notebook_markdown,
+                kernel_spec=spec
+            )
         
         # Full prompt is: 
         # - instruction from file
@@ -239,16 +252,18 @@ class DataMaker:
             except Exception:
                 return float("inf")
 
-
         max_file_number = sorted(
             os.listdir(PathVariable.SAVE_PATH.value),
             key=lambda x: sort_files(x),
             reverse=True
-        )[0].split("-")[0]
+        )
+        max_file_number = max_file_number[0].split("-")[0] if max_file_number else 0
 
         try:
-            with open(os.path.join(PathVariable.SAVE_PATH.value, f"{int(max_file_number) + 1}-{datetime.now().date()}-{"-".join(name.split(""))}.md"), 
-                      "w", encoding="utf-8"
+            with open(
+                file=os.path.join(PathVariable.SAVE_PATH.value, f"{int(max_file_number) + 1}-{"-".join(name.split(" "))}-{datetime.now().date()}.md"), 
+                mode="w",
+                encoding="utf-8"
             ) as f:
                 f.write(markdown_text)
 
@@ -256,3 +271,21 @@ class DataMaker:
             return False
         
         return True
+    
+
+    def get_notebooks_list(self) -> list:
+        """
+        Function returns list of ready notebooks saved in selected dir
+
+        Returns:
+            list: List of name ready notebooks
+        """
+
+        notebooks_name_list = os.listdir(PathVariable.SAVE_PATH.value)
+        if notebooks_name_list:
+            return sorted(
+                notebooks_name_list,
+                key=lambda x: int(x.split("-")[0])
+            )
+
+        return []
