@@ -6,8 +6,10 @@ from json_repair import repair_json
 
 
 class LLM:
+    
     def __init__(self) -> None:
         self.is_connected = None
+        self.is_chat_started = None
     
     
     def connect_client(self, api_key: str) -> None:
@@ -38,13 +40,13 @@ class LLM:
         ]
 
 
-    def get_model_parameters(self, model_name: str) -> dict[str, Any] | None:
+    def get_model_parameters(self, model_name) -> dict[str, int] | None:
         """
         It retrieves the model parameters based on the given model name \\
         It returns only the maximum number of input and output tokens
 
         Args:
-            model_name (str): Name of selected model
+            model_name (...): Name of selected model
 
         Returns:
             dict[str, Any] | None: Information on token limits
@@ -61,12 +63,12 @@ class LLM:
                 }
             
 
-    def count_tokens(self, model_name: str, prompt: str) -> int | None:
+    def count_tokens(self, model_name, prompt: str) -> int:
         """
         Count tokens in a given prompt according to the selected model
 
         Args:
-            model_name (str): Name of selected model
+            model_name (...): Name of selected model
             prompt (str): Prompt to count tokens
 
         Returns:
@@ -77,10 +79,10 @@ class LLM:
         return self.client.models.count_tokens(
             model=model_name,
             contents=prompt,
-        ).total_tokens
+        ).total_tokens # type: ignore
     
     
-    def _format_output(self, response: str) -> dict[str, Any] | bool:
+    def _format_output(self, response: str | None) -> dict[str, Any] | bool:
         """
         Function formats response from LLM model
 
@@ -91,6 +93,9 @@ class LLM:
             dict[str, Any] | bool: JSON with data or bool (False) as signal of error
         """
         
+        if response is None:
+            return False
+
         start = response.find("{")
         end = response.rfind("}")
         if start == -1 or end == -1:
@@ -101,12 +106,12 @@ class LLM:
         return json.loads(repair_json(json_response))
     
     
-    def generate_notebook(self, model_name: str, prompt: str, **kwargs) -> dict[str, Any] | bool:
+    def generate_notebook(self, model_name, prompt: str, **kwargs) -> dict[str, Any] | bool:
         """
         Function can generate new response (notebook) based on given prompt
 
         Args:
-            model_name (str): Name of selected model
+            model_name (...): Name of selected model
             prompt (str): Prompt to generate a response by model
 
         Returns:
@@ -129,7 +134,7 @@ class LLM:
             config=types.GenerateContentConfig(**model_config)
         )
 
-        if isinstance(formated_output := self._format_output(llm_model_response.text), bool): # type: ignore
+        if isinstance(formated_output := self._format_output(llm_model_response.text), bool):
             return False
         
         if not isinstance(formated_output, dict) or formated_output.get("new_notebook", None) is None:
@@ -137,3 +142,23 @@ class LLM:
 
         return formated_output
     
+
+    def create_chat(self, model_name) -> None:
+        """
+        Creating new session of chat for selected model  
+
+        Args:
+            model_name (_type_): _description_
+        """
+        assert self.is_connected is True, "First, connect to the API"
+
+        self.chat = self.client.chats.create(model=model_name)
+        self.is_chat_started = True
+
+    
+    def send_message(self, prompt: str) -> str | None:
+        """Send message to Google Gemini API"""
+        assert self.is_connected is True, "First, connect to the API"
+        assert self.is_chat_started is True, "First, start a chat"
+
+        return self.chat.send_message(prompt).text
